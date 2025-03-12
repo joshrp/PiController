@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "evdev": "^0.3.0",
+    "pino": "^9.6.0",
+    "pino-pretty": "^13.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "wtfnode": "^0.10.0"
+  }
+}
