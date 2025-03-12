@@ -1,0 +1,24 @@
+services:
+  pi_controller_fe:
+    container_name: PiControllerFE
+    build: ./fe
+    ports:
+      - "3001:3000"
+    restart: unless-stopped
+    volumes:
+      - ./fe:/app/fe:rw
+  # This doesn't work as steamlink is unhappy in a container    
+  # pi_controller_api:
+  #   privileged: true
+  #   build: ./api
+  #   ports:
+  #     - "3002:3002"
+  #   restart: unless-stopped
+  #   network_mode: host
+  #   volumes:
+  #     - ./api:/app/api:rw
+  #     - /dev/input:/dev/input:ro
+  #     - /tmp/.X11-unix:/tmp/.X11-unix:rw
+  #     - /var/run/dbus:/var/run/dbus:z
+  #   environment:
+  #     - DISPLAY

@@ -1,0 +1,30 @@
+{
+  "name": "picontroller",
+  "version": "1.0.0",
+  "main": "index",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsx src/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joshrp/PiController.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/joshrp/PiController/issues"
+  },
+  "homepage": "https://github.com/joshrp/PiController#readme",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^20",
+    "SharedTypes": "file:../shared",
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@fastify/cors": "*",
+    "evdev-gamepad": "file:../../evdev-wrapper-node",
+    "fastify": "^5.2.1"
+  }
+}
