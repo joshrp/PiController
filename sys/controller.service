@@ -1,0 +1,14 @@
+[Unit]
+Description=PyController
+After=network.target docker.service
+StartLimitIntervalSec=0
+
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=2
+ExecStart=/home/josh/scripts/controller/venv/bin/python /home/josh/scripts/controller/web.py
+
+[Install]
+WantedBy=graphical.target
