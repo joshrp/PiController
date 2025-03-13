@@ -1,2 +1,4 @@
 KERNEL=="event*", SUBSYSTEM=="input", ATTRS{uniq}=="ec:83:50:f4:0e:56", SYMLINK+="input/by-path/xbox-main"
 
+KERNEL=="event*", SUBSYSTEM=="input", ATTRS{properties}=="0", ATTRS{uniq}=="d0:bc:c1:ce:cb:58", SYMLINK+="input/by-path/ps-white"
+

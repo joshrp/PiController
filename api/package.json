@@ -1,0 +1,26 @@
+{
+  "name": "picontroller",
+  "version": "1.0.0",
+  "main": "index",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joshrp/PiController.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/joshrp/PiController/issues"
+  },
+  "homepage": "https://github.com/joshrp/PiController#readme",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^20",
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "fastify": "^5.2.1"
+  }
+}
