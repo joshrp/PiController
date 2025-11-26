@@ -1,9 +1,9 @@
-import Fastify, { FastifyReply, FastifyRequest } from 'fastify'
+import Fastify, { FastifyReply, FastifyRequest } from 'fastify';
 
+import { Device, Input, State } from "evdev-gamepad";
 import { actions, processesList } from "./actions";
 import { controllers } from "./config";
 import { DeviceResp } from "./types";
-import { Device, Input, State, Mappings } from "evdev-gamepad";
 
 import cors from '@fastify/cors';
 
@@ -74,7 +74,7 @@ export const main: () => Promise<void> = () => new Promise(async (resolve, rejec
     }
 
     cont.on('macro', async (id, config) => {
-      console.log('[',controller.name, '] Macro triggered:', id);
+      console.log('[', controller.name, '] Macro triggered:', id);
       if (id === 'TV_ON') {
         actions.set_active_input.start();
       }
@@ -109,19 +109,16 @@ export const main: () => Promise<void> = () => new Promise(async (resolve, rejec
         await actions.moonlight.stop();
         console.log('MoonlightOff');
       }
-      if (id === 'ControllerDisconnect') {
-        if (controller.mapping instanceof Mappings.PS5Mapping) {
-          console.log('[',controller.name, '] ControllerDisconnect');
-          await actions.bluetooth_disconnect.start(controller.mac);
-          console.log('[',controller.name, '] Disconnected via bluetoothctl');
-        } else console.log('[',controller.name, '] Skipping disconnect for non-PS controller');
+      if (id === 'ControllerDisconnect' && controller.safeDisconnect) {
+        console.log('[', controller.name, '] ControllerDisconnect');
+        await actions.bluetooth_disconnect.start(controller.mac);
       }
-    });  
+    });
 
     cont.on('connect', (...args) => {
-      console.log('[',controller.name, '] connect:', args);
+      console.log('[', controller.name, '] connect:', args);
     }).on('disconnect', (...args) => {
-      console.log('[',controller.name, '] disconnect:', args);
+      console.log('[', controller.name, '] disconnect:', args);
     }).on('state-change', (...args) => {
       // Debug button presses
       // console.log('[',controller.name, '] input:', args);

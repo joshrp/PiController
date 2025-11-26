@@ -11,6 +11,8 @@ export type ControllerConfig = {
   upowerPath: string;
   // Controller name for display / logging only
   name: string
+  // Whether to perform a safe disconnect (if supported)
+  safeDisconnect: boolean;
 }
 
 export interface DeviceResp extends ControllerConfig {

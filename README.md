@@ -40,6 +40,7 @@ Finally, use `upower --dump` to find the upower path for your controller battery
 
 ### Running service
 
+Alter `./sys/controller.service` to use the correct node path.
 `ln -s $PWD/sys/controller.service ~/.config/systemd/user/controller.service`
 `systemctl --user enable controller.service`
 `systemctl --user start controller.service`
@@ -66,12 +67,7 @@ Currently has mappings for Xbox Series S and PS5 Dual Sense controllers. Other c
 ### ./actions/
 Holds all the things that can ran, either by controller or by HTTP request. Some commands wait for complete and parse output (e.g. get device info), some wait for a start and leave it alone (e.g. steamlink).
 
-`handleInputEvent` takes a set of controller button states and runs any actions associated with them.
-Typically just called on every button event with the whole state.
-
-- ./index.ts - Has all the actions listed, with what commands to run
-
-- ./lib.ts - Has the command runner and a few parsers
+Actions usually have a `start` and sometimes a `stop`, using `runCmd` from `lib.ts` to run shell commands. Some wait for completion, some just wait for successful start.
 
 # ./sys
 Contains the UDEV rules for the controllers to be mounted as a user. This needs symlinking into udev rules.
