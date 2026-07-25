@@ -1,5 +1,14 @@
 {
   "compilerOptions": {
+    // Without a target, tsc defaults to ES5 and down-compiles classes to the
+    // __extends helper, which calls the base constructor as a function. That
+    // throws against evdev-gamepad's Device, which ships as a native class -
+    // so anything extending it (see ./src/gamepad/steam-controller.ts) needs a
+    // target that emits real classes.
+    "target": "ES2020",
+    // Setting a target above ES5 flips the module default to ES2015; this
+    // package is CommonJS (index.ts uses require.main), so pin it.
+    "module": "commonjs",
     "outDir": "./dist",
     "sourceMap": true,
   }
