@@ -210,8 +210,8 @@ export class SteamControllerDevice extends Device {
   }
 
   async connect(): Promise<boolean> {
-    if (this.fileExists() === false) {
-      await this.waitForFile();
+    if (Device.fileExists(this.hidPath) === false) {
+      await Device.waitForFile(this.hidPath);
       await sleep(OPEN_GRACE_MS);
     }
 
