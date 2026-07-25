@@ -5,3 +5,6 @@ KERNEL=="event*", SUBSYSTEM=="input", ATTRS{properties}=="0", ATTRS{uniq}=="d0:b
 KERNEL=="event*", SUBSYSTEM=="input", ATTRS{properties}=="0", ATTRS{uniq}=="EC:C4:0D:D8:E6:01", SYMLINK+="input/by-path/pro-controller"
 
 KERNEL=="event*", SUBSYSTEM=="input", ATTRS{properties}=="0", ATTRS{uniq}=="14:3A:9A:21:C3:20", SYMLINK+="input/by-path/ps-black"
+
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="28de", ATTRS{idProduct}=="1304", ENV{STEAM_CTL}="1"
+SUBSYSTEM=="hidraw", ENV{STEAM_CTL}=="1", ATTRS{bInterfaceNumber}=="02", SYMLINK+="input/by-path/steam-controller", TAG+="uaccess"

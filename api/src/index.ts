@@ -12,10 +12,12 @@ export const main: () => Promise<void> = () => new Promise(async (resolve, rejec
   // All controllers use the same macro scheme for now
   for (const controller of controllers) {
     console.log(`Setting up controller: ${controller.name} at ${controller.eventPath}`);
-    const cont = new Device({
-      path: controller.eventPath,
-      mapping: controller.mapping
-    });
+    const cont = controller.createDevice
+      ? controller.createDevice(controller.eventPath)
+      : new Device({
+        path: controller.eventPath,
+        mapping: controller.mapping
+      });
 
     const escapeSeq = [{ input: Input.LeftBumper, state: State.Pressed }, { input: Input.RightBumper, state: State.Pressed }];
 

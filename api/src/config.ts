@@ -5,11 +5,18 @@
  * upowerPath is the path used by upower to get battery level. See `upower --dump`
  */
 
+import { SteamControllerDevice } from "./gamepad/steam-controller";
 import { ControllerConfig } from "./types";
-import { BaseMapping, MappingClass, Mappings } from "evdev-gamepad";
+import { BaseMapping, Device, MappingClass, Mappings } from "evdev-gamepad";
 
 export type ControllerCombined = ControllerConfig & {
   mapping: MappingClass
+  /**
+   * Controllers the kernel exposes through evdev need nothing here. Ones read
+   * some other way (see ./gamepad/steam-controller.ts) supply a factory
+   * returning an API-compatible Device; `mapping` is unused for those.
+   */
+  createDevice?: (path: string) => Device
 }
 export const controllers: ControllerCombined[] = [
   {
@@ -46,6 +53,16 @@ export const controllers: ControllerCombined[] = [
     safeDisconnect: false,
     eventPath: '/dev/input/by-path/ps-black',
     mac: "EC:C4:0D:D8:E6:01",
+    upowerPath: ''
+  },
+  {
+    name: "Steam Controller",
+    mapping: new BaseMapping(),
+    createDevice: (path) => new SteamControllerDevice({ path }),
+    image: 'switch-pro.png',
+    safeDisconnect: false,
+    eventPath: '/dev/input/by-path/steam-controller',
+    mac: "",
     upowerPath: ''
   }
 ]
