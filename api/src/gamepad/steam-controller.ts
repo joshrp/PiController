@@ -70,8 +70,18 @@ export const SteamInput = {
 };
 
 /**
- * Discovered with steamc.py against /dev/hidraw0. Names in the comments are the
- * physical buttons; the `input` is what PiController sees.
+ * Verified against labelled captures of a real controller taken in both modes
+ * (steamlink running and not). The 46-byte report is a single type - byte 0 is
+ * always 0x45 and byte 1 is a packet counter - and bytes 2-4 hold the digital
+ * buttons identically in both modes.
+ *
+ * Bytes 10-17 carry the analog sticks as signed 16-bit little-endian pairs:
+ * left X at 10, left Y at 12, right X at 14, right Y at 16. They are not bound
+ * here (see the note at the top of the file), but nothing else reads them, so
+ * stick movement cannot disturb the buttons.
+ *
+ * Names in the comments are the physical buttons; `input` is what PiController
+ * sees.
  */
 export const STEAM_CONTROLLER_BINDINGS: SteamBinding[] = [
   // Face buttons, laid out Xbox-style, so A/B/X/Y are South/East/West/North.
@@ -91,17 +101,10 @@ export const STEAM_CONTROLLER_BINDINGS: SteamBinding[] = [
   { input: Input.RightBumper, length: 46, offset: 3, mask: 0x02 }, // R1
 
   { input: Input.RightTrigger, length: 46, offset: 4, mask: 0x80 }, // R2
-
-  // L2 is the odd one out: it moves between reports depending on whether
-  // lizard mode is on, so it is bound twice and whichever source is live wins.
-  //
-  // With steamlink running, lizard mode is off and byte 5 of the 46-byte report
-  // carries the trigger's analog travel. Three bits of it were seen moving, so
-  // testing them together acts as a deadzone - a light pull reads as released.
-  { input: Input.LeftTrigger, length: 46, offset: 5, mask: 0x38 },
-  // With steamlink closed, lizard mode returns and the same button arrives as
-  // a mouse click on the 6-byte emulation report instead.
-  { input: Input.LeftTrigger, length: 6, offset: 1, mask: 0x02 },
+  // Byte 5 is a flags byte, not analog travel: bit 3 is L2, while the other
+  // bits mark stick and pad activity and the rear paddles. Only bit 3 belongs
+  // to the trigger - a wider mask fires it whenever a paddle is brushed.
+  { input: Input.LeftTrigger, length: 46, offset: 5, mask: 0x08 },
 
   // Four discrete D-pad bits folded back into the two axes evdev reports.
   { input: Input.DPadX, state: State.Left, length: 46, offset: 3, mask: 0x10 },
@@ -114,6 +117,28 @@ export const STEAM_CONTROLLER_BINDINGS: SteamBinding[] = [
   { input: SteamInput.R4, length: 46, offset: 2, mask: 0x80 },
   { input: SteamInput.R5, length: 46, offset: 3, mask: 0x01 },
 ];
+
+/**
+ * A report must carry this byte to be decoded at all.
+ *
+ * Every one of the 5458 captured 46-byte reports began with 0x45. Without the
+ * check, pointing this class at the wrong hidraw node - easily done, since the
+ * numbering moves between boots and the device exposes several - decodes
+ * whatever that interface emits as button bits, and inputs appear to fire at
+ * random. Failing loudly beats guessing.
+ */
+export const REPORT_SIGNATURES: {
+  [length: number]: { offset: number; value: number };
+} = {
+  46: { offset: 0, value: 0x45 },
+};
+
+/**
+ * Lengths the controller emits that this class deliberately ignores: the
+ * keyboard and mouse lizard-mode reports. Listing them keeps the unknown-length
+ * warning meaningful instead of firing on every normal run.
+ */
+const IGNORED_LENGTHS = [6, 9, 13, 15];
 
 /** The bindings feeding one input, within one report length. */
 type ReportGroup = {
@@ -139,16 +164,21 @@ export class SteamControllerDevice extends Device {
   private lastBytes: { [length: number]: number[] } = {};
   private restingStates: { [input: string]: State } = {};
   private warnedLengths: { [length: number]: boolean } = {};
+  private signatures: { [length: number]: { offset: number; value: number } };
+  private rejected = 0;
 
   constructor(options: {
     /** Path to the hidraw node, e.g. /dev/hidraw0. Absolute path recommended. */
     path: string;
     /** Defaults to the discovered Steam Controller map. */
     bindings?: SteamBinding[];
+    /** Per-length report signatures; pass {} to decode without checking. */
+    signatures?: { [length: number]: { offset: number; value: number } };
   }) {
     super({ path: options.path });
 
     this.hidPath = options.path;
+    this.signatures = options.signatures || REPORT_SIGNATURES;
 
     const bindings = options.bindings || STEAM_CONTROLLER_BINDINGS;
     for (const binding of bindings) {
@@ -271,12 +301,30 @@ export class SteamControllerDevice extends Device {
   private handleReport(report: Buffer) {
     const plan = this.plans[report.length];
     if (!plan) {
-      if (!this.warnedLengths[report.length]) {
+      if (
+        IGNORED_LENGTHS.indexOf(report.length) === -1 &&
+        !this.warnedLengths[report.length]
+      ) {
         this.warnedLengths[report.length] = true;
         console.warn(
           `[steam-controller] no bindings for ${report.length}-byte reports, ` +
             `ignoring them. If this is a length you mapped, the read is not ` +
             `landing on report boundaries.`
+        );
+      }
+      return;
+    }
+
+    const signature = this.signatures[report.length];
+    if (signature && report[signature.offset] !== signature.value) {
+      this.rejected++;
+      if (this.rejected === 1 || this.rejected % 1000 === 0) {
+        console.error(
+          `[steam-controller] ${this.hidPath}: ${report.length}-byte report has ` +
+            `0x${report[signature.offset].toString(16)} at byte ${signature.offset}, ` +
+            `expected 0x${signature.value.toString(16)} (${this.rejected} rejected). ` +
+            `This is almost certainly the wrong hidraw node - check what ` +
+            `${this.hidPath} resolves to.`
         );
       }
       return;
